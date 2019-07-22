@@ -140,44 +140,22 @@ def train_epoch(args, epoch, modelG, modelD, data_loader, optimizerG, optimizerD
 
 def evaluate(args, epoch, model, data_loader, writer):
     model.eval()
-    #print('modle evluatio')
     losses = []
     start = time.perf_counter()
-    #ssim_loss = pytorch_ssim.SSIM()
-    # print ("Validation started" )
-    # logging.info("Epoch {}".format(epoch))
     with torch.no_grad():
         for iter, data in enumerate(tqdm(data_loader)):
-            input, target, coords, fm = data
+            input, target = data
             input = input.unsqueeze(1).to(args.device)
             target = target.unsqueeze(1).to(args.device)
             
-            #\print(torch.max(target), torch.max(output))
-           # mean = mean.unsqueeze(1).unsqueeze(2).to(args.device)
-            #std = std.unsqueeze(1).unsqueeze(2).to(args.device)
-           # target = target * std + mean
-            #output = output * std + mean
-
-            #norm = norm.unsqueeze(1).unsqueeze(2).to(args.device)
-
-            # logging.info("input")
             input = input.float()
-            # logging.info("target")
             target = target.float()
-            # logging.info("model")
             output = model(input)
 
-            # logging.info("loss")
-            #loss = F.binary_cross_entropy_with_logits(output[:,1,:,:].unsqueeze(1), target.float())
             loss = F.nll_loss(output,target.squeeze(1).long())
-            
-            #ssim_out = ssim_loss(target, output)  
-            #losses_mse.append(loss)
             losses.append(loss)
-            # print ("Iteration {}".format(iter))
-            #break
+        
         writer.add_scalar('Dev_Loss_nll', np.mean(losses), epoch)
-        #writer.add_scalar('Dev_Loss_ssim', np.mean(losses_ssim), epoch)
        
     return np.mean(losses), time.perf_counter() - start
 
@@ -185,89 +163,29 @@ def evaluate(args, epoch, model, data_loader, writer):
 
 def visualize(args, epoch, model, data_loader, writer):
     def save_image(image, tag):
-        #print('1')
         image -= image.min()
-        #print(image.max())
         image /= image.max()
-        #print('2')
         grid = torchvision.utils.make_grid(image, nrow=4, pad_value=1)
         writer.add_image(tag, grid, epoch)
-    #size = 30
     model.eval()
-    #class_mults = torch.arange(2).unsqueeze(1).unsqueeze(1).float().to(args.device)
     with torch.no_grad():
         for iter, data in enumerate(tqdm(data_loader)):
-            input, target, coords, fname = data
+            input, target = data
             input = input.unsqueeze(1).to(args.device)
             target = target.unsqueeze(1).to(args.device)
             output = model(input.float())
-            #output_class = output*class_mults
-            #output_class = torch.sum(output_class, dim = 1).unsqueeze(1)   
             
             output_numpy = output.detach().cpu().numpy()
             output_mask  = np.argmax(output_numpy,axis=1).astype(float)
-            # output_numpy[output_numpy>=0.5] == 1
-            # output_numpy[output_numpy<0.5] == 0
-            # output_mask = (output_numpy>=0.5).astype(np.float)
-            print(np.unique(output_mask),np.max(output_numpy),np.min(output_numpy),output_mask.shape)
+            #print(np.unique(output_mask),np.max(output_numpy),np.min(output_numpy),output_mask.shape)
             output_final = torch.from_numpy(output_mask).unsqueeze(1)
 
-            #output_class_numpy = output_class.detach().cpu().numpy()
-            #output_class_mask  = np.argmax(output_class_numpy,axis=1).astype(float)  
-            #output_class_final = torch.from_numpy(output_class_numpy)#.unsqueeze(1)
-            # print(torch.max(output_final), torch.min(output_final), torch.unique(output_final))
-            #batch_size = input.shape[0]
-            #target = target.float()
-            '''
-            o = []
-            t = []
-            #print(coords)
-
-            for i in range(input.shape[0]):
-                cx, cy = coords[i][0]
-                cx = int(cx.item())
-                cy = int(cy.item())
-                #cx = cx + 5
-                #cy = cy + 5
-
-                o.append(output[i,:,cy-size:cy+size,cx-size:cx+size]) 
-                t.append(target[i,:,cy-size:cy+size,cx-size:cx+size])
-
-            o_tensor = torch.stack(o).float().to(args.device)
-            t_tensor = torch.stack(t).float().to(args.device)
-            '''
             save_image(target.float(), 'Target')
-            #save_image(output[:,1,:,:].unsqueeze(1), 'Segmentation')
-            #print (output.shape)
             save_image(output_final,'Segmentation')
-            #save_image(output_class_final,'Segmentation_Class')
-            #save_image(torch.abs(target.float() - output[:,1,:,:].unsqueeze(1).float()), 'Error')
-            #save_image(t_tensor, 'TargetPatch')
-            #save_image(o_tensor[:,1,:,:].unsqueeze(1), 'SegmentationPatch')
-            #save_image(torch.abs(t_tensor.float() - o_tensor[:,1,:,:].unsqueeze(1).float()), 'PatchError')
-            break
+            break #Visualize a single batch of images.
 
 
-def save_model_step(args, exp_dir, epoch, model, optimizer, disc, optimizerD, iter):
-    #rint("in model save  ")
-    out = torch.save(
-        {
-            'epoch': epoch,
-            'args': args,
-            'model': model.state_dict(),
-            'optimizer': optimizer.state_dict(),
-            'disc': disc.state_dict(),
-            'optimizerD': optimizerD.state_dict(),
-            'exp_dir': exp_dir,
-            'iter': iter
-        },
-        f=exp_dir / 'model_epoch_{}_iter_{}.pt'.format(epoch, iter)
-    )
-    #print('save', out)
-    #if is_new_best:
-    #   shutil.copyfile(exp_dir / 'model.pt', exp_dir / 'best_model.pt')
 def save_model(args, exp_dir, epoch, model, optimizer, disc, optimizerD, dev_nll):
-    #rint("in model save  ")
     if epoch%5 == 0:
         out = torch.save(
             {
@@ -301,11 +219,8 @@ def load_model(checkpoint_file):
     checkpoint = torch.load(checkpoint_file)
     args = checkpoint['args']
     model = build_model(args)
-    #args.data_parallel = True
-    #print (args.data_parallel)
     #WARNING!!! Check data parallel
     if args.data_parallel:
-        #print('sda')
        model = torch.nn.DataParallel(model)
     model.load_state_dict(checkpoint['model'])
 
@@ -324,7 +239,6 @@ def load_model(checkpoint_file):
 
 def build_optim(args, params):
     optimizer = torch.optim.Adam(params, args.lr, weight_decay=args.weight_decay)
-    #optimizer = optim.SGD(params, lr=5e-3)
     return optimizer
 
 def make_one_hot(labels, C=2):
@@ -345,9 +259,7 @@ def make_one_hot(labels, C=2):
         N x C x H x W, where C is class number. One-hot encoded.
     '''
     one_hot = torch.cuda.FloatTensor(labels.size(0), C, labels.size(2), labels.size(3)).zero_()
-    target = one_hot.scatter_(1, labels.data, 1)
-    
-    # target = Variable(target)
+    target = one_hot.scatter_(1, labels.data, 1) 
         
     return target
 
@@ -381,14 +293,10 @@ def main(args):
     train_loader, dev_loader, display_loader = create_data_loaders(args)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizerG, args.lr_step_size, args.lr_gamma)
 
-    dev_nll=0
-    dev_time=0
-
     for epoch in range(start_epoch, args.num_epochs+1):
         scheduler.step(epoch)
         train_lossG, train_lossD, train_time = train_epoch(args, epoch, modelG, modelD, train_loader, optimizerG , optimizerD, writer, display_loader, args.exp_dir)
         print ("Epoch {}".format(epoch))
-        # logging.info("Train over")
         print ("Validation for epoch :{}".format(epoch))
         dev_nll, dev_time = evaluate(args, epoch, model, dev_loader, writer)
         
