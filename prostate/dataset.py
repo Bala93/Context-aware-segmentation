@@ -25,7 +25,7 @@ class TrainData(Dataset):
             target = data['mask'].value.astype(np.uint8)
             target[target==255] = 1
 
-        return (torch.from_numpy(inp), torch.from_numpy(target))
+        return (torch.from_numpy(input), torch.from_numpy(target))
 
 
 class TrainDataStaticLocal(Dataset):
@@ -48,7 +48,7 @@ class TrainDataStaticLocal(Dataset):
             target[target==255] = 1
             coords = data['coord'].value #Center Coordinate of the local ROI(for each input in the batch).
 
-        return (torch.from_numpy(inp), torch.from_numpy(target), torch.from_numpy(coords))   
+        return (torch.from_numpy(input), torch.from_numpy(target), torch.from_numpy(coords))   
  
 
 class TrainDataDynamicLocal(Dataset):
@@ -72,7 +72,7 @@ class TrainDataDynamicLocal(Dataset):
             coords = data['coord'].value #Center Coordinate of the local ROI(for each input in the batch).
             bbox   = data['bbox'].value #ROI Size(bbox x bbox) for the particular batch.
 
-        return (torch.from_numpy(inp), torch.from_numpy(target), torch.from_numpy(coords),bbox)   
+        return (torch.from_numpy(input), torch.from_numpy(target), torch.from_numpy(coords),bbox)   
 
 class ValidData(Dataset):
 
@@ -93,5 +93,5 @@ class ValidData(Dataset):
             target = data['mask'].value.astype(np.uint8)
             target[target==255] = 1
 
-        return (torch.from_numpy(inp), torch.from_numpy(target))
+        return (torch.from_numpy(input), torch.from_numpy(target))
 
