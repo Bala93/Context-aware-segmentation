@@ -21,7 +21,6 @@ from dataset import TrainData,ValidData
 from model import UNet,Discriminator
 
 
-#TODO: Have to look into the logger part 
 logging.basicConfig(filename="log_prostrate_global_run6.txt",
                             filemode='a',
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
@@ -271,7 +270,7 @@ def main(args):
     args.exp_dir.mkdir(parents=True, exist_ok=True)
     writer = SummaryWriter(log_dir=str(args.exp_dir / 'summary'))
 
-    if args.resume: # TODO: Check this block of code for batch size being used from the saved checkpoint 
+    if args.resume: 
         print('resuming model, batch_size', args.batch_size)
         checkpoint, model, optimizer, disc, optimizerD = load_model(args.checkpoint)
         bs = args.batch_size
@@ -322,9 +321,6 @@ def create_arg_parser():
                         help='Multiplicative factor of learning rate decay')
     parser.add_argument('--weight-decay', type=float, default=0.,
                         help='Strength of weight decay regularization')
-
-    parser.add_argument('--report-interval', type=int, default=100, help='Period of loss reporting') # TODO: Check whether this is been used 
-    
     parser.add_argument('--data-parallel', action='store_true', 
                         help='If set, use multiple GPUs using data parallelism')
     parser.add_argument('--device', type=str, default='cuda',
