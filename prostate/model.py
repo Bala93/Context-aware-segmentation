@@ -189,16 +189,16 @@ class StaticLocalDiscriminator(nn.Module):
         self.conv1 = nn.Conv2d(n_channels,32,(9,9), 1)
         self.conv2 = nn.Conv2d(32,64,(5,5))
         self.conv3 = nn.Conv2d(64,64,(5,5))
-        self.fc1 = nn.Linear(576,512) 
+        self.fc1 = nn.Linear(256,512) 
         self.fc2 = nn.Linear(512,64)
         
     def forward(self,x):
         x = F.avg_pool2d(F.leaky_relu(self.conv1(x), 0.2),(2,2))
-        x = F.leaky_relu(self.conv1(x),0.2)
-        x = F.leaky_relu(self.conv2(x),0.2)
-        x = F.leaky_relu(self.conv3(x),0.2)
-        x = self.fc2(self.fc1(x)) 
+        x = F.avg_pool2d(F.leaky_relu(self.conv2(x),0.2),(2,2))
+        x = F.avg_pool2d(F.leaky_relu(self.conv3(x),0.2),(2,2))
         x = x.view(-1,self.num_of_flat_features(x))
+        x = F.leaky_relu(self.fc1(x),0.2) 
+        x = F.leaky_relu(self.fc2(x),0.2) 
 
         return x
 
@@ -220,7 +220,6 @@ class DynamicLocalDiscriminator(nn.Module):
         self.gap1 = nn.AdaptiveAvgPool2d((1,1))
         
     def forward(self,x):
-        x = F.avg_pool2d(F.leaky_relu(self.conv1(x), 0.2),(2,2))
         x = F.leaky_relu(self.conv1(x),0.2)
         x = F.leaky_relu(self.conv2(x),0.2)
         x = F.leaky_relu(self.conv3(x),0.2)
