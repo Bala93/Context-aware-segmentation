@@ -18,7 +18,7 @@ from tqdm import tqdm
 import argparse
 
 from dataset import TrainData,ValidData
-from models import UNet,Discriminator
+from model import UNet,Discriminator
 
 
 #TODO: Have to look into the logger part 
@@ -65,7 +65,9 @@ def create_data_loaders(args):
 
 def train_epoch(args, epoch, modelG, modelD, data_loader, optimizerG, optimizerD, writer, display_loader, exp_dir):
 
-    model.train()
+    modelG.train()
+    modelD.train()
+
     running_loss = 0.
 
     start_epoch = start_iter = time.perf_counter()
@@ -107,22 +109,22 @@ def train_epoch(args, epoch, modelG, modelD, data_loader, optimizerG, optimizerD
 
         pred_fake = modelD((torch.exp(outG)).detach())
         fake_label = torch.zeros(pred_fake.shape).to(args.device)
-        lossD_fake = criterion_dis(pred_fake, fake_label)
+        lossD_fake = criterionD(pred_fake, fake_label)
 
         pred_real = modelD(make_one_hot(target.long()).float())
         real_label = torch.ones(pred_real.shape).to(args.device)
-        lossD_real = criterion_dis(pred_real, real_label)
+        lossD_real = criterionD(pred_real, real_label)
 
-        lossD = (loss_D_real + loss_D_fake) * 0.5 
+        lossD = (lossD_real + lossD_fake) * 0.5 
         lossD.backward()
         optimizerD.step()
 
-        for param in netD.parameters():
+        for param in modelD.parameters():
             param.requires_grad = False
 
         optimizerG.zero_grad()
         pred_fake = modelD((torch.exp(outG)).detach())
-        lossD_adversarial = criterion_dis(pred_fake, real_label)
+        lossD_adversarial = criterionD(pred_fake, real_label)
 
         lossD_adversarial = (lossD_adversarial)*scale
         lossGan = lossG + lossD_adversarial
@@ -298,18 +300,19 @@ def main(args):
         train_lossG, train_lossD, train_time = train_epoch(args, epoch, modelG, modelD, train_loader, optimizerG , optimizerD, writer, display_loader, args.exp_dir)
         print ("Epoch {}".format(epoch))
         print ("Validation for epoch :{}".format(epoch))
-        dev_nll, dev_time = evaluate(args, epoch, model, dev_loader, writer)
+        dev_nll, dev_time = evaluate(args, epoch, modelG, dev_loader, writer)
         
         print ("Visualization for epoch :{}".format(epoch))
-        visualize(args, epoch, model, display_loader, writer)
-        save_model(args, args.exp_dir, epoch, model, optimizer, disc, optimizerD, dev_nll)
+        visualize(args, epoch, modelG, display_loader, writer)
+        save_model(args, args.exp_dir, epoch, modelG, optimizerG,modelD, optimizerD, dev_nll)
         logging.info(f'Epoch = [{epoch:4d}/{args.num_epochs:4d}] TrainLossG = {train_lossG:.4g} TrainLossD = {train_lossD:.4g} 'f'DevNLL = {dev_nll:.4g} TrainTime = {train_time:.4f}s DevTime = {dev_time:.4f}s')
     writer.close()
 
 
 def create_arg_parser():
 
-    parser = argparse.ArgumentParser(decscription='Train setup for GAN based segmentaiton')
+    parser = argparse.ArgumentParser(description='Train setup for GAN based segmentaiton')
+    parser.add_argument('--seed', default=42, type=int, help='Seed for random number generators')
     parser.add_argument('--batch-size', default=2, type=int,  help='Mini batch size')
     parser.add_argument('--num-epochs', type=int, default=150, help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
