@@ -18,7 +18,7 @@ from tqdm import tqdm
 import argparse
 
 from dataset import TrainData,ValidData
-from model import UNet,Discriminator
+from models import UNet,Discriminator
 
 
 logging.basicConfig(filename="log_prostrate_global_run6.txt",

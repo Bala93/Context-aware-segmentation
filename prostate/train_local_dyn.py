@@ -18,7 +18,7 @@ from tqdm import tqdm
 import argparse
 
 from dataset import TrainDataDynamicLocal,ValidData
-from model import UNet,DynamicContextDiscriminator
+from models import UNet,DynamicContextDiscriminator
 
 logging.basicConfig(filename="log_prostrate_local_dyn.txt",
                             filemode='a',
