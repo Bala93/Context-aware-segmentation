@@ -66,13 +66,15 @@ class TrainDataDynamicLocal(Dataset):
 
         fname = self.examples[i]
         with h5py.File(fname, 'r') as data:
-            input  = data['img'].value
+            input = data['img'].value
+            input = np.transpose(input,[2,0,1]) #Transform input of dimension HxWxC to CxWxH.  
             target = data['mask'].value.astype(np.uint8)
+            target = np.transpose(target,[2,0,1])
             target[target==255] = 1
             coords = data['coord'].value #Center Coordinate of the local ROI(for each input in the batch).
             bbox   = data['bbox'].value #ROI Size(bbox x bbox) for the particular batch.
 
-        return (torch.from_numpy(input), torch.from_numpy(target), torch.from_numpy(coords),bbox)   
+        return (torch.from_numpy(np.expand_dims(input,1)), torch.from_numpy(np.expand_dims(target,1)).long(), coords, bbox)   
 
 class ValidData(Dataset):
 
