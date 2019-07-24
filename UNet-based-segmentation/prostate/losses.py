@@ -29,7 +29,7 @@ class LossMulti:
                 union = jaccard_output.sum() + jaccard_target.sum()
                 loss -= torch.log((intersection + eps) / (union - intersection + eps)) * self.jaccard_weight 
 
-        return loss, loss_hausdorff
+        return loss
 
 class FocalLoss:
     def __init__(self,jaccard_weight=0, class_weights=None,num_classes=1,device=None):

@@ -66,9 +66,9 @@ class DatasetImageMaskStaticLocal(Dataset):
             mask  = np.expand_dims(mask, 0)
 
         if self.mode == 'train':    
-            return img_file_name,torch.from_numpy(image).float(),torch.from_numpy(mask).long(), torch.from_numpy(coord)
+            return torch.from_numpy(image).float(),torch.from_numpy(mask).long(), torch.from_numpy(coord)
         if self.mode == 'valid':
-            return img_file_name,torch.from_numpy(image).float(),torch.from_numpy(mask).long(), torch.from_numpy(coord)
+            return torch.from_numpy(image).float(),torch.from_numpy(mask).long()
 
 
 class DatasetImageMaskDynamicLocal(Dataset):
@@ -107,7 +107,7 @@ class DatasetImageMaskDynamicLocal(Dataset):
 
 
         if self.mode == 'train':    
-            return img_file_name,torch.from_numpy(image).float(),torch.from_numpy(mask).long(), torch.from_numpy(coord),bbox
+            return torch.from_numpy(image).float(),torch.from_numpy(mask).long(), torch.from_numpy(coord),bbox
         if self.mode == 'valid':
-            return img_file_name,torch.from_numpy(image).float(),torch.from_numpy(mask).long(), torch.from_numpy(coord)
+            return torch.from_numpy(image).float(),torch.from_numpy(mask).long(), torch.from_numpy(coord)
 
