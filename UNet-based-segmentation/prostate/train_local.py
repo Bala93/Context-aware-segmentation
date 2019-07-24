@@ -16,7 +16,7 @@ from tensorboardX import SummaryWriter
 from utils import visualize,evaluate
 from losses import LossMulti, FocalLoss 
 from models import UNet
-from dataset import DatasetImageMaskStaticLocal
+from dataset import DatasetImageMaskLocal
 
 if __name__ == "__main__":
 
@@ -72,9 +72,9 @@ if __name__ == "__main__":
         print(epoch_start)
 
     
-    trainLoader   = DataLoader(DatasetImageMaskStaticLocal(train_file_names,object_type,mode='train'),batch_size=batch_size)
-    devLoader     = DataLoader(DatasetImageMaskStaticLocal(val_file_names,object_type,mode='valid'))
-    displayLoader = DataLoader(DatasetImageMaskStaticLocal(val_file_names,object_type,mode='valid'),batch_size=val_batch_size)
+    trainLoader   = DataLoader(DatasetImageMaskLocal(train_file_names,object_type,mode='train'),batch_size=batch_size)
+    devLoader     = DataLoader(DatasetImageMaskLocal(val_file_names,object_type,mode='valid'))
+    displayLoader = DataLoader(DatasetImageMaskLocal(val_file_names,object_type,mode='valid'),batch_size=val_batch_size)
 
     optimizer = Adam(model.parameters(), lr=1e-4)
 
