@@ -77,7 +77,12 @@ if __name__ == "__main__":
     displayLoader = DataLoader(DatasetImageMaskGlobal(val_file_names,object_type,mode='valid'),batch_size=val_batch_size)
 
     optimizer = Adam(model.parameters(), lr=1e-4)
-    criterion = FocalLoss(num_classes=2,device=device)
+
+    #TODO:Include LossType in Argparse.
+    #criterion = LossMulti(num_classes=2,jaccard_weight=0) #GLOBAL(CE)
+    #criterion = LossMulti(num_classes=2,jaccard_weight=0,class_weights=np.array([0.25,0.75]),device=device) #WEIGHTEDCE
+    #criterion = LossMulti(num_classes=2,jaccard_weight=1) #DICE
+    criterion = FocalLoss(num_classes=2)  #FOCAL
 
 
     for epoch in tqdm(range(int(epoch_start)+1,int(epoch_start)+1+no_of_epochs)):
