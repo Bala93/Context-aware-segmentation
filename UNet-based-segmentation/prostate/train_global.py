@@ -12,10 +12,9 @@ import h5py
 import torchvision
 import random
 from tensorboardX import SummaryWriter
-from scipy.ndimage.morphology import distance_transform_edt
 
 from utils import visualize,evaluate
-from losses import LossMulti 
+from losses import LossMulti, FocalLoss 
 from models import UNet
 from dataset import DatasetImageMaskGlobal
 
@@ -23,12 +22,14 @@ if __name__ == "__main__":
 
     train_path  =  '/media/htic/NewVolume3/Balamurali/promise_prostate_dataset/train/*.h5'
     val_path = '/media/htic/NewVolume3/Balamurali/promise_prostate_dataset/test/*.h5'
-    object_type = 'prostrate'
+    object_type = 'prostate'
     model_type = 'UNet'
-    save_path = '/media/htic/NewVolume5/midl_experiments/nll/{}_{}/models_run4'.format(object_type,model_type)
-    load_path = '/media/htic/NewVolume5/midl_experiments/nll/prostrate_unet/models_run3/40.pt'
+    save_path = '/media/htic/NewVolume5/midl_experiments/nll/{}_{}/models_global'.format(object_type,model_type)
 
     use_pretrained = False
+    pretrained_model_path = '/media/htic/NewVolume5/midl_experiments/nll/prostate_unet/models_run3/40.pt'
+   
+    #TODO:Add hyperparams to ArgParse. 
     batch_size = 16
     val_batch_size = 9 
     no_of_epochs = 150
@@ -38,9 +39,9 @@ if __name__ == "__main__":
 
 
 
-    writer = SummaryWriter(log_dir='/media/htic/NewVolume5/midl_experiments/nll/{}_{}/models_run4/summary'.format(object_type,model_type))
+    writer = SummaryWriter(log_dir='/media/htic/NewVolume5/midl_experiments/nll/{}_{}/models_global/summary'.format(object_type,model_type))
 
-    logging.basicConfig(filename="log_{}_run4.txt".format(object_type),
+    logging.basicConfig(filename="log_{}_run_global.txt".format(object_type),
                             filemode='a',
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M',
@@ -65,9 +66,9 @@ if __name__ == "__main__":
     # To handle epoch start number and pretrained weight 
     epoch_start = '0'
     if(use_pretrained):
-        print("Loading Model {}".format(os.path.basename(load_path)))
-        model.load_state_dict(torch.load(load_path))
-        epoch_start = os.path.basename(load_path).split('.')[0]
+        print("Loading Model {}".format(os.path.basename(pretrained_model_path)))
+        model.load_state_dict(torch.load(pretrained_model_path))
+        epoch_start = os.path.basename(pretrained_model_path).split('.')[0]
         print(epoch_start)
 
     
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     displayLoader = DataLoader(DatasetImageMaskGlobal(val_file_names,object_type,mode='valid'),batch_size=val_batch_size)
 
     optimizer = Adam(model.parameters(), lr=1e-4)
-    criterion = FocalLoss2(num_classes=2,device=device)
+    criterion = FocalLoss(num_classes=2,device=device)
 
 
     for epoch in tqdm(range(int(epoch_start)+1,int(epoch_start)+1+no_of_epochs)):
@@ -84,7 +85,7 @@ if __name__ == "__main__":
         global_step = epoch * len(trainLoader)
         running_loss = 0.0
 
-        for i,(img_file_name,inputs,targets,_,_) in enumerate(tqdm(trainLoader)):
+        for i,(inputs,targets) in enumerate(tqdm(trainLoader)):
 
             model.train()
             inputs   = inputs.to(device)
@@ -94,7 +95,7 @@ if __name__ == "__main__":
 
             with torch.set_grad_enabled(True):
                 outputs = model(inputs) 
-                loss_global = criterion_global(outputs,targets,gamma=2,alpha=4)
+                loss = criterion(outputs,targets,gamma=2,alpha=4)
 
                 writer.add_scalar('loss', loss, epoch)
 
@@ -114,5 +115,5 @@ if __name__ == "__main__":
             print("Global Loss:{} ".format(epoch_loss))
         
         logging.info('epoch:{} train_loss:{} '.format(epoch,epoch_loss))
-        if epoch%5 == 0:
-            torch.save(model.state_dict(),os.path.join(save_path,str(epoch)+'.pt'))
+        #if epoch%5 == 0:
+        #    torch.save(model.state_dict(),os.path.join(save_path,str(epoch)+'.pt'))

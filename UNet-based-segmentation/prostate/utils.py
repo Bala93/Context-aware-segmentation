@@ -1,20 +1,13 @@
 import torch
 import os
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
-from dataset import DatasetImageMask, DatasetMaskLevelCurve, DatasetImageMaskH5
-import glob
-from models import UNet,ResUnet,UNet16,LinkNet34,Segnet,ResUNet_github
-from losses import LossMulti
-from torch.optim import Adam
 from tqdm import tqdm
-import logging
 from torch import nn
 import numpy as np
-import h5py
 import torchvision
 from torch.nn import functional as F
 import time
+
+
 
 def evaluate(device, epoch, model, data_loader, writer):
     model.eval()
@@ -24,7 +17,7 @@ def evaluate(device, epoch, model, data_loader, writer):
 
         for iter, data in enumerate(tqdm(data_loader)):
 
-            img_file_name,inputs,targets = data
+            inputs,targets = data
             inputs = inputs.to(device)
             targets = targets.to(device)
             outputs = model(inputs)
@@ -45,7 +38,7 @@ def visualize(device, epoch, model, data_loader, writer, val_batch_size, train=F
     model.eval()
     with torch.no_grad():
         for iter, data in enumerate(tqdm(data_loader)):
-            img_file_name,inputs,targets = data
+            inputs,targets = data
             inputs = inputs.to(device)
 
             targets = targets.to(device)
