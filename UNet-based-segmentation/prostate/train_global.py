@@ -100,8 +100,9 @@ if __name__ == "__main__":
 
             with torch.set_grad_enabled(True):
                 outputs = model(inputs) 
+                #TODO:LossType.
                 loss = criterion(outputs,targets,gamma=2,alpha=4)
-
+                #loss = criterion(outputs,targets)
                 writer.add_scalar('loss', loss, epoch)
 
                 loss.backward()
