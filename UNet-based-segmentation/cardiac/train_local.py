@@ -116,7 +116,7 @@ if __name__ == "__main__":
                 loss = loss_global + loss_local
                 writer.add_scalar('loss_global', loss_global, epoch)
                 writer.add_scalar('loss_local', loss_local, epoch)
-                writer.add_scalar('Total Loss', loss.item(), epoch)
+                writer.add_scalar('Total_Loss', loss.item(), epoch)
                 
                 loss.backward()
                 optimizer.step()
