@@ -77,8 +77,8 @@ if __name__ == "__main__":
     optimizer = Adam(model.parameters(), lr=1e-4)
 
     #TODO:Include LossType in Argparse.
-    #criterion = LossMulti(num_classes=2,jaccard_weight=0) #GLOBAL(CE)
-    #criterion = LossMulti(num_classes=2,jaccard_weight=0,class_weights=np.array([0.25,0.75]),device=device) #WEIGHTEDCE
+    #criterion = LossMulti(num_classes=4,jaccard_weight=0) #GLOBAL(CE)
+    #criterion = LossMulti(num_classes=4,jaccard_weight=0,class_weights=np.array([0.1,0.5,0.2,0.2]),device=device) #WEIGHTEDCE
     criterion = FocalLoss(num_classes=4,device=device)  #FOCAL
 
 
